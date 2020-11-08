@@ -1,0 +1,49 @@
+version: "3.3"
+services:
+  service1:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=user
+      - POSTGRES_DB=db
+    ports:
+      - 5432:5432
+
+  service2:
+    build: service2
+    depends_on:
+      - service1
+    volumes:
+      - ./data:/root/data
+      - ./service2/data_loader.py:/root/data_loader.py
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=user
+      - POSTGRES_DB=db
+      - POSTGRES_PORT=5432
+      - DATA_PATH=data/data.csv
+      - TABLE_NAME=table3
+      - RECONNECT_SLEEP_TIME=3
+      - MAX_RECONNECT_ITER=3
+    network_mode: host
+    command: python ./data_loader.py
+
+  service3:
+    build: service3
+    depends_on:
+      - service1
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=user
+      - POSTGRES_DB=db
+      - POSTGRES_PORT=5432
+      - WEB_SERVER_PORT=5555
+      - TABLE_NAME=table3
+      - RECONNECT_SLEEP_TIME=3
+      - MAX_RECONNECT_ITER=5
+    ports:
+      - 5555:5555
+    volumes:
+      - ./service3/rest-api.py:/root/rest-api.py
+    command: python ./rest-api.py
+    network_mode: host
